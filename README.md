@@ -17,7 +17,7 @@ For more information, see [About agent skills](https://docs.github.com/en/copilo
 First push this repo to GitHub, then register it as a plugin marketplace inside Copilot CLI:
 
 ```
-/plugin marketplace add <your-username>/skills-marketplace
+/plugin marketplace add abhishekojha38/my-skills-marketplace
 ```
 
 Install the document-skills plugin:
