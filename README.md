@@ -62,6 +62,7 @@ Copilot will automatically discover it when you work in that project.
 | Plugin | Description | Skills |
 |--------|-------------|--------|
 | `document-skills` | AsciiDoc document creation and editing | `asciidoc` |
+| `code-review-skills` | Gerrit code review workflows | `gerrit` |
 
 ## Skills
 
@@ -71,12 +72,22 @@ Copilot will automatically discover it when you work in that project.
 |-------|-------------|
 | [`asciidoc`](./skills/asciidoc/) | Write and edit AsciiDoc (`.adoc`) documents processed by Asciidoctor. Covers headers, sections, tables, code blocks, admonitions, images, includes, and document attributes. |
 
+### Code Review Skills
+
+| Skill | Description |
+|-------|-------------|
+| [`gerrit`](./skills/gerrit/) | Submit, amend, and review Gerrit changes using git-review CLI. Covers patchsets, downloading changes, and rebase operations. |
+
 ## Using a Skill
 
 Once installed, Copilot will automatically select the right skill based on your prompt. You can also invoke a skill explicitly:
 
 ```
 Use the /asciidoc skill to create a weekly status report
+```
+
+```
+Use the /gerrit skill to download change 12345
 ```
 
 ## Adding New Skills
@@ -92,8 +103,10 @@ skills-marketplace/
 ├── .claude-plugin/
 │   └── marketplace.json     # Plugin registry (used by /plugin command)
 ├── skills/
-│   └── asciidoc/
-│       └── SKILL.md         # AsciiDoc document skill
+│   ├── asciidoc/
+│   │   └── SKILL.md         # AsciiDoc document skill
+│   └── gerrit/
+│       └── SKILL.md         # Gerrit code review skill
 ├── template/
 │   └── SKILL.md             # Starter template for new skills
 ├── .gitignore
