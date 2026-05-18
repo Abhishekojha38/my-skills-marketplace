@@ -1,0 +1,22 @@
+{
+  "name": "aojha-skills",
+  "owner": {
+    "name": "aojha",
+    "email": ""
+  },
+  "metadata": {
+    "description": "Custom skills marketplace",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "document-skills",
+      "description": "Collection of document creation and formatting skills including ASCII document generation",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/asciidoc"
+      ]
+    }
+  ]
+}
