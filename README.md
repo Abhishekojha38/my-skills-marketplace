@@ -62,7 +62,7 @@ Copilot will automatically discover it when you work in that project.
 | Plugin | Description | Skills |
 |--------|-------------|--------|
 | `document-skills` | AsciiDoc document creation and editing | `asciidoc` |
-| `code-review-skills` | Gerrit code review workflows | `gerrit` |
+| `gerrit` | Gerrit code review workflows | `gerrit` |
 
 ## Skills
 
