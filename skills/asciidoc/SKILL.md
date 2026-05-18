@@ -1,160 +1,206 @@
 ---
-name: asciidoc
-description: "Use this skill whenever the user wants to create, write, edit, or convert documents using AsciiDoc format (files ending in .adoc or .asciidoc). Triggers include: requests to write AsciiDoc documents, technical documentation, README files in AsciiDoc, books, articles, man pages, or any structured document that will be processed by Asciidoctor. Also use when converting Markdown or plain text to AsciiDoc, or when asking about AsciiDoc syntax, attributes, macros, or Asciidoctor features. Do NOT use for Markdown (.md), HTML, Word (.docx), or PDF output directly — AsciiDoc is the source format; Asciidoctor converts it."
+name: asciidoctor
+description: >
+  Use this skill whenever the user wants to create, edit, review, reformat, or
+  improve AsciiDoc (.adoc) files. Triggers include: any mention of ".adoc",
+  "AsciiDoc", "Asciidoctor", "adoc file", or requests to write technical
+  documentation, READMEs, manuals, or structured documents in AsciiDoc format.
+  Also triggers for: wrapping lines at 80 characters in .adoc files, grammar
+  checking AsciiDoc content, adding or formatting tables in AsciiDoc, converting
+  bullet lists to AsciiDoc syntax, applying text highlighting or admonition
+  blocks, linting or cleaning up .adoc formatting, and converting Markdown or
+  plain text into AsciiDoc. When in doubt, use this skill for any task touching
+  an .adoc file — even if the user just says "fix my doc" and there's an .adoc
+  file present.
 ---
 
-# AsciiDoc Document Skill
+# AsciiDoctor Skill
 
-## Overview
-
-AsciiDoc is a lightweight markup language for writing technical documentation, books, articles, and man pages. [Asciidoctor](https://asciidoctor.org) is the standard processor that converts `.adoc` files to HTML5, PDF, DocBook, EPUB, and more.
-
-**File extension:** `.adoc` (preferred) or `.asciidoc`
-**Reference:** https://docs.asciidoctor.org/asciidoc/latest/
+This skill enables AI agents to create, modify, review, and format AsciiDoc
+(`.adoc`) files to a professional standard. It covers the full editing
+lifecycle: line wrapping, grammar checking, structural formatting (tables,
+lists, headings), text highlighting, and admonition blocks.
 
 ---
 
-## Document Header
+## Workflow Overview
 
-The header is optional but recommended. It must appear at the top with **no blank lines** between header elements. One blank line ends the header and begins the body.
+1. **Read** the `.adoc` file (or accept content inline)
+2. **Detect** which tasks apply (wrap, grammar, structure, highlighting)
+3. **Apply** changes in order: structure → grammar → formatting → line wrap
+4. **Output** the corrected `.adoc` file and summarise changes made
 
-```asciidoc
-= Document Title
-Author Name <author@example.com>
-v1.0, 2025-01-10
-:toc:
-:toc-title: Table of Contents
-:sectnums:
-:source-highlighter: rouge
-:icons: font
-:doctype: article
+Always apply line wrapping **last**, after all structural edits, to avoid
+re-wrapping after content insertions.
 
-First paragraph of the document body.
+---
+
+## 1. Reading and Writing `.adoc` Files
+
+Use `bash_tool` or `view` to read `.adoc` files from disk.
+
+```bash
+cat /path/to/file.adoc
 ```
 
-### Key Header Attributes
+Write changes using `str_replace` for targeted edits, or `create_file` when
+rewriting the whole document.
 
-| Attribute | Effect |
-|-----------|--------|
-| `:toc:` | Generates a table of contents |
-| `:toc-title: My TOC` | Custom TOC heading |
-| `:sectnums:` | Auto-numbers sections |
-| `:source-highlighter: rouge` | Syntax highlighting in code blocks |
-| `:icons: font` | Enables Font Awesome icons for admonitions |
-| `:doctype: article` | Document type: `article` (default), `book`, `manpage` |
-| `:author: Name` | Override author (if not set in header line 2) |
-| `:revdate: 2025-01-10` | Revision date |
-| `:imagesdir: images/` | Base path for all images |
-| `:data-uri:` | Embed images as data URIs in HTML output |
+Always preserve the document header block (lines starting with `=`, `:author:`,
+`:revdate:`, `:doctype:`, etc.) exactly — do not reformat it.
 
 ---
 
-## Section Titles
+## 2. Line Wrapping at 80 Characters
 
-Sections use `=` signs. The document title is level 0; body sections start at level 1.
+**Rule:** Every content line must be ≤ 80 characters. This is a hard limit.
 
-```asciidoc
-= Document Title          (level 0 — document title only)
+### What to wrap
+- Paragraph prose
+- List item text that exceeds 80 chars
+- Table cell content (wrap inside the cell, not at the `|` delimiter)
+- Admonition body text
 
-== Level 1 Section
+### What NOT to wrap
+- Document header attributes (`:key: value` lines)
+- Block delimiters (`----`, `====`, `****`, `____`, `++++`)
+- Macro calls on a single line (`image::`, `include::`, `link:`)
+- URLs inside angle brackets (`<https://...>`)
+- Code blocks (inside `[source]` + `----` fences) — never rewrap code
+- Table delimiter rows (`|===`)
+- Section titles (`== Title`, `=== Subtitle`)
 
-=== Level 2 Section
+### Wrapping rules
+- Break at a word boundary; never split a word across lines.
+- Continuation lines in a paragraph need **no** special character — a bare
+  newline continues the paragraph in AsciiDoc.
+- For list items longer than 80 chars, indent the continuation with `+` or
+  just a two-space indent on the next line:
 
-==== Level 3 Section
-
-===== Level 4 Section
-
-====== Level 5 Section
+```adoc
+* This is a long list item that needs to be wrapped at the eighty character
+  boundary so it stays readable.
 ```
 
-For a **discrete heading** (not part of the section hierarchy):
+### Automated wrap (bash helper)
 
-```asciidoc
-[discrete]
-=== Standalone Heading
+When wrapping a large file, use `fold` or `fmt` carefully — only on prose
+paragraphs, never on code blocks:
+
+```bash
+# Quick check: list lines over 80 chars with line numbers
+awk 'length > 80 {print NR": "length" chars: "$0}' file.adoc
 ```
+
+Review output manually; do not blindly pipe the whole file through `fold`.
 
 ---
 
-## Text Formatting
+## 3. Grammar Check
 
-```asciidoc
-*bold text*                  Bold (constrained)
-**b**old                     Bold (unconstrained, mid-word)
+Perform a grammar review on all prose content. Focus on:
 
-_italic text_                Italic (constrained)
-__i__talic                   Italic (unconstrained)
+- Subject–verb agreement
+- Correct article usage (a/an/the)
+- Consistent tense (prefer present tense for technical docs)
+- Spelling errors
+- Oxford comma in lists of three or more items
+- Avoid passive voice where active is clearer
+- Remove redundant words ("in order to" → "to", "due to the fact that" →
+  "because")
 
-`monospace text`             Inline monospace
-``m``onospace                Monospace (unconstrained)
+**Do not** change technical terms, product names, command strings, or content
+inside code blocks (`----` fences), inline code (`` `code` ``), or attribute
+values.
 
-*_bold italic_*              Bold and italic combined
-`*_all three_*`              Monospace bold italic
+When reporting grammar changes, list them as a brief summary after the edited
+file, e.g.:
 
-#highlighted text#           Highlight
-[.underline]#underlined#     Underlined
-[.line-through]#struck#      Strikethrough
-
-^super^script                Superscript
-~sub~script                  Subscript
-
-"`double curved quotes`"     Typographic double quotes
-'`single curved quotes`'     Typographic single quotes
 ```
-
----
-
-## Links and Cross-References
-
-```asciidoc
-https://example.com                           Autolink
-https://example.com[Link Text]                Named link
-https://example.com[Open,window=_blank]       New tab
-
-link:relative/path.html[Local File]           Relative link
-
-<<section-id>>                                Cross-reference by ID
-<<section-id,Custom Text>>                    Cross-reference with label
-
-[[my-anchor]]                                 Define inline anchor
-[#my-anchor]                                  Block anchor (preferred)
+Grammar changes:
+- Line 14: "it are" → "it is"
+- Line 31: removed redundant "in order to"
+- Line 55: "an user" → "a user"
 ```
 
 ---
 
-## Lists
+## 4. Tables
 
-### Unordered (Bullet) Lists
+Use AsciiDoc's `|===` table syntax. Follow these conventions:
 
-```asciidoc
+### Basic table
+
+```adoc
+[cols="1,2,1", options="header"]
+|===
+| Column A | Column B           | Column C
+
+| Row 1    | Some longer value  | X
+| Row 2    | Another value      | Y
+|===
+```
+
+### When to add a table
+
+Convert to a table when the content is a **comparison**, a **property list**,
+or a **multi-attribute description** with 3 or more items that currently sit
+in prose or a bullet list. Ask yourself: would a reader scan this faster as a
+table? If yes, convert it.
+
+### Column widths
+
+- Use relative integer ratios in `cols=`: `"1,3,1"` means narrow / wide /
+  narrow.
+- For simple equal-width tables, omit `cols=` entirely.
+- Always add `options="header"` when the first row is a header.
+
+### Cell wrapping
+
+Long cell content wraps naturally inside the cell. You do not need explicit
+line breaks. Keep individual cell lines ≤ 80 chars where possible.
+
+### Advanced features (use when appropriate)
+
+```adoc
+// Merged cell (colspan)
+2+| This cell spans two columns
+
+// Vertical alignment
+[cols="^,<,>"]   // center, left, right
+
+// Asciidoc content inside a cell
+a| This cell can contain *bold*, lists, etc.
+```
+
+---
+
+## 5. Bullet Points and Lists
+
+### Unordered list (bullets)
+
+```adoc
 * First item
 * Second item
 ** Nested item
-*** Deeper nested item
+** Another nested item
 * Third item
 ```
 
-### Ordered Lists
+Use `*` for bullets. Use `**` for one level of nesting, `***` for two, etc.
 
-```asciidoc
+### Ordered list
+
+```adoc
 . Step one
 . Step two
-.. Sub-step A
-.. Sub-step B
+.. Sub-step
 . Step three
 ```
 
-### Checklist
+### Description list (definition list)
 
-```asciidoc
-* [x] Completed task
-* [ ] Pending task
-* [*] Also completed
-```
-
-### Description List
-
-```asciidoc
+```adoc
 Term one::
   Definition of term one.
 
@@ -162,388 +208,196 @@ Term two::
   Definition of term two.
 ```
 
-### List Continuation (attach content to list item)
+### When to add a list
 
-```asciidoc
-* First item
+Convert prose to a list when:
+
+- Three or more parallel items appear in a sentence joined by commas or "and"
+- Steps must be performed in order → use ordered list (`.`)
+- You are enumerating features, options, or requirements
+
+Do **not** convert to a list when:
+
+- There are only two items (keep as prose: "X and Y")
+- The items are part of flowing narrative with connective reasoning
+- The content is already in a table
+
+### Continuation blocks
+
+To attach a code block or paragraph to a list item, use `+`:
+
+```adoc
+. Install the package:
 +
-This paragraph is attached to the first item.
-+
+[source,bash]
 ----
-code block also attached
+npm install my-package
 ----
 
-* Second item
+. Verify the installation.
 ```
 
 ---
 
-## Code Blocks
+## 6. Text Highlighting and Emphasis
 
-### Listing Block (no syntax highlighting)
+### Inline formatting
 
-```asciidoc
-----
-plain listing block
-no syntax highlighting
-----
+| Effect            | Syntax                  | Example output     |
+|-------------------|-------------------------|--------------------|
+| Bold              | `*word*`                | **word**           |
+| Italic            | `_word_`                | _word_             |
+| Monospace/code    | `` `word` ``            | `word`             |
+| Highlighted       | `#word#`                | highlighted        |
+| Strikethrough     | `[line-through]#word#`  | ~~word~~           |
+| Superscript       | `^word^`                | word^              |
+| Subscript         | `~word~`                | word_              |
+
+### When to apply emphasis
+
+- **Bold** (`*...*`): key terms on first use, UI element names, warnings
+  inline in prose.
+- _Italic_ (`_..._`): book/doc titles, foreign words, subtle stress.
+- `` `Code` ``: command names, file paths, variable names, config keys —
+  **always** use monospace for these, never bold or plain text.
+- `#Highlight#`: use sparingly for genuinely critical callouts that don't
+  warrant a full admonition block.
+
+Never bold entire sentences or paragraphs. If a whole block needs emphasis,
+use an admonition instead.
+
+### Admonition blocks
+
+Use admonitions for structured callouts:
+
+```adoc
+NOTE: This is a general note for additional context.
+
+TIP: This is a helpful suggestion or shortcut.
+
+IMPORTANT: This must not be overlooked.
+
+WARNING: This could cause data loss or unexpected behaviour.
+
+CAUTION: Proceed carefully; verify before continuing.
 ```
 
-### Source Block (with syntax highlighting)
+Or the block form (preferred for multi-sentence content):
 
-```asciidoc
-[source,python]
-----
-def greet(name):
-    return f"Hello, {name}!"
-
-print(greet("world"))
-----
-```
-
-### Source Block with Title and Callouts
-
-```asciidoc
-.server.py
-[source,python]
-----
-import http.server  // <1>
-
-PORT = 8080  // <2>
-
-httpd = http.server.HTTPServer(("", PORT), http.server.SimpleHTTPRequestHandler)  // <3>
-httpd.serve_forever()
-----
-<1> Import the standard library HTTP server.
-<2> Define the port number.
-<3> Create and start the server.
-```
-
-### Literal Block (preserves spacing, no highlighting)
-
-```asciidoc
-....
-$ git status
-On branch main
-nothing to commit, working tree clean
-....
-```
-
-### Inline Monospace
-
-```asciidoc
-Use the `--verbose` flag for more output.
-```
-
----
-
-## Tables
-
-```asciidoc
-|===
-|Column 1 |Column 2 |Column 3
-
-|Row 1, Col 1
-|Row 1, Col 2
-|Row 1, Col 3
-
-|Row 2, Col 1
-|Row 2, Col 2
-|Row 2, Col 3
-|===
-```
-
-### Table with Title and Column Widths
-
-```asciidoc
-.Supported Formats
-[cols="1,2,1",options="header"]
-|===
-|Format |Description |Extension
-
-|HTML5
-|Web-ready output via Asciidoctor
-|.html
-
-|PDF
-|Print-ready via asciidoctor-pdf
-|.pdf
-
-|DocBook
-|XML interchange format
-|.xml
-|===
-```
-
-### Column Specifiers
-
-| Specifier | Meaning |
-|-----------|---------|
-| `1,2,1` | Relative widths (proportional) |
-| `~,~,~` | Auto widths |
-| `h` prefix | Header-style column (e.g., `h,1,1`) |
-| `>` | Right-align column |
-| `^` | Center-align column |
-| `<` | Left-align (default) |
-| `a` | AsciiDoc content in cell |
-| `m` | Monospace column |
-| `e` | Emphasis (italic) column |
-
-### Cell with AsciiDoc Content
-
-```asciidoc
-[cols="1a,1"]
-|===
-|AsciiDoc Cell |Normal Cell
-
-|
-* bullet one
-* bullet two
-
-NOTE: Admonitions work too.
-
-|Plain text cell
-|===
-```
-
----
-
-## Admonitions
-
-```asciidoc
-NOTE: A general note for the reader.
-
-TIP: A helpful tip or shortcut.
-
-IMPORTANT: Something the reader must not overlook.
-
-CAUTION: Warns of a potential pitfall.
-
-WARNING: Indicates a risk of data loss or damage.
-```
-
-### Admonition Block (multi-paragraph)
-
-```asciidoc
+```adoc
 [WARNING]
 ====
-This operation is irreversible.
-
+Deleting this directory will remove all user data.
 Make sure you have a backup before proceeding.
 ====
 ```
 
----
+**Admonition selection guide:**
 
-## Images
-
-```asciidoc
-image::path/to/image.png[]                     Block image
-
-image::path/to/image.png[Alt text]             With alt text
-
-image::path/to/image.png[Screenshot,400,300]   With width and height
-
-.Figure Caption
-image::path/to/image.png[Alt text,600]         With title/caption
-
-image:inline.png[icon] followed by text        Inline image (single colon)
-```
+- `NOTE` — supplementary info, "by the way" context
+- `TIP` — optional improvement, shortcut, best practice
+- `IMPORTANT` — required step or condition that is easy to miss
+- `WARNING` — potential for data loss, security risk, or breaking change
+- `CAUTION` — reversible but risky action; user should double-check
 
 ---
 
-## Includes
+## 7. Document Structure Conventions
 
-```asciidoc
-include::other-file.adoc[]              Include full file
+### Header block
 
-include::snippets/code.rb[tag=example]  Include tagged region only
-
-include::data.csv[lines=1..5]           Include specific lines
-```
-
-### Tagged Region in Source File
-
-```asciidoc
-# tag::example[]
-def hello():
-    print("Hello")
-# end::example[]
-```
-
----
-
-## Blocks and Delimiters
-
-### Sidebar
-
-```asciidoc
-.Sidebar Title
-****
-Sidebar content — supplementary material set apart from the main text.
-****
-```
-
-### Example Block
-
-```asciidoc
-.Example Title
-====
-Content of the example block.
-====
-```
-
-### Quote / Blockquote
-
-```asciidoc
-[quote,Author Name,Source Title]
-____
-The quoted text goes here.
-____
-
-"Short inline quote."
--- Attribution, Source
-```
-
-### Passthrough Block (raw HTML/content)
-
-```asciidoc
-++++
-<div class="custom">Raw HTML passed through as-is.</div>
-++++
-```
-
----
-
-## Attributes (Variables)
-
-```asciidoc
-:product-name: Skills Marketplace
-:version: 2.0
-
-The {product-name} version {version} is now available.
-```
-
-Unset an attribute with a leading `!`:
-
-```asciidoc
-:!toc:
-```
-
----
-
-## Macros
-
-### Keyboard, Button, Menu (requires `:experimental:`)
-
-```asciidoc
-= Doc Title
-:experimental:
-
-Press kbd:[Ctrl+S] to save.
-
-Click btn:[Submit] to continue.
-
-Select menu:File[Save As > PDF].
-```
-
----
-
-## Document Structure Examples
-
-### Article (default)
-
-```asciidoc
-= Technical Guide
+```adoc
+= Document Title
 Author Name <author@example.com>
-v1.0, 2025-01-10
+:revdate: 2025-01-01
+:doctype: article
 :toc:
-:sectnums:
-:source-highlighter: rouge
+:toc-title: Table of Contents
 :icons: font
-
-== Introduction
-
-Brief introduction to the topic.
-
-== Installation
-
-=== Prerequisites
-
-* Ruby 3.0+
-* Bundler
-
-=== Steps
-
-. Clone the repository.
-. Run `bundle install`.
-. Run `bundle exec asciidoctor document.adoc`.
-
-== Configuration
-
-[source,yaml]
-----
-server:
-  port: 8080
-  host: localhost
-----
-
-[NOTE]
-====
-All configuration values can be overridden via environment variables.
-====
-
-== Reference
-
-.Available Commands
-[cols="1m,2",options="header"]
-|===
-|Command |Description
-
-|asciidoctor doc.adoc
-|Convert to HTML5
-
-|asciidoctor -b docbook doc.adoc
-|Convert to DocBook XML
-|===
+:source-highlighter: rouge
 ```
 
-### README (minimal)
+Always keep the header intact when editing. Add `:toc:` if the document has
+three or more sections and it is absent.
 
-```asciidoc
-= Project Name
+### Section levels
 
-A one-line description.
+```adoc
+= Document Title        (level 0 — document title only)
+== Section              (level 1)
+=== Subsection          (level 2)
+==== Sub-subsection     (level 3)
+```
 
-== Quick Start
+Do not skip levels (e.g., never go from `==` directly to `====`).
 
+### Blank lines
+
+- One blank line between paragraphs.
+- One blank line before and after any block (list, table, code block,
+  admonition, section title).
+- No trailing whitespace on any line.
+- End the file with exactly one newline.
+
+---
+
+## 8. Code Blocks
+
+Always use a named source block with a language tag:
+
+```adoc
 [source,bash]
 ----
-git clone https://github.com/user/repo
-cd repo
-make install
+echo "Hello, world"
 ----
 
-== Documentation
-
-See the link:docs/guide.adoc[User Guide] for full details.
-
-== License
-
-MIT
+[source,python]
+----
+def greet(name):
+    return f"Hello, {name}"
+----
 ```
+
+- Never wrap or reformat content inside `----` fences.
+- Add `[source,<lang>]` if it is missing and the language is identifiable.
+- Use `....` (literal block) for plain pre-formatted text with no syntax.
 
 ---
 
-## Guidelines
+## 9. Review Checklist
 
-1. **File extension:** Use `.adoc` for all AsciiDoc files.
-2. **Header first:** Place the document header (title, author, attributes) at the top with no blank lines between elements; one blank line ends the header.
-3. **Blank lines matter:** A blank line separates paragraphs, ends lists, and ends most blocks.
-4. **Attributes over hardcoding:** Use document attributes (`:variable: value`) for values used more than once.
-5. **Prefer block macros over inline for images:** Use `image::` (two colons) for standalone images; `image:` (one colon) only when the image is part of a sentence.
-6. **Source blocks always specify language:** `[source,python]`, `[source,bash]`, etc. — enables correct syntax highlighting.
-7. **`:sectnums:` for technical docs:** Always suggest numbered sections for technical documentation and books.
-8. **`:toc:` placement:** Place `:toc:` in the document header; for left-positioned TOC use `:toc: left`.
-9. **Admonitions sparingly:** Use `NOTE`, `TIP`, `IMPORTANT`, `CAUTION`, `WARNING` to call attention to specific content — don't overuse.
-10. **Never mix Markdown syntax:** AsciiDoc and Markdown look similar but are incompatible. Never use `#` for headings, `**` for bold, or `---` for horizontal rules in AsciiDoc.
+Run through this checklist before finalising any `.adoc` file:
+
+- [ ] All lines ≤ 80 characters (except exempt lines listed in §2)
+- [ ] No trailing whitespace
+- [ ] File ends with a single newline
+- [ ] No skipped heading levels
+- [ ] All code blocks have `[source,<lang>]` annotation
+- [ ] Tables have `options="header"` where the first row is a header
+- [ ] Admonitions use the correct type for the content
+- [ ] Inline code (`` `...` ``) used for all commands, paths, and config keys
+- [ ] Grammar checked; passive voice minimised
+- [ ] Blank lines present before and after all blocks
+- [ ] No bare URLs — wrap in `<url>` or use `link:url[label]`
+
+---
+
+## 10. Output Format
+
+When returning an edited file:
+
+1. Output the full corrected `.adoc` content (use `create_file` to write it).
+2. Follow with a **Changes Summary** section in chat:
+
+```
+Changes Summary
+───────────────
+Line wrap:    43 lines wrapped to ≤ 80 chars
+Grammar:      5 corrections (see details below)
+Tables:       1 new table added (lines 34–45)
+Lists:        2 prose enumerations converted to bullet lists
+Highlighting: 3 inline code spans added; 1 WARNING admonition added
+Structure:    Added :toc: to document header
+```
+
+If no changes were needed in a category, omit that line.
