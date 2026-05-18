@@ -189,15 +189,11 @@ git commit -m "Part 2: Update tests"
 git review -t authentication-refactor
 ```
 
-See [common-workflows.md](references/common-workflows.md) for more examples.
+See [workflows.md](references/workflows.md) for more examples.
 
 ## Model Guidance
 
 This skill wraps an official CLI. A fast, lightweight model is sufficient.
-
-## Troubleshooting
-
-See [troubleshooting.md](references/troubleshooting.md) for common issues and fixes.
 
 ## Official Documentation
 
