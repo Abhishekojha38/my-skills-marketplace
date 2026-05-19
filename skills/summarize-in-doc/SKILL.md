@@ -6,7 +6,7 @@ argument-hint: "What will the next session be used for?"
 
 Write a summary document summarizing the current conversation, so a fresh agent can continue the work. Save to the current directory of project for which the summary is being generated.
 
-Name of the summary doc must be in format: "summary-[YYYY]-[MM]-[DD]-[HH]-[MM].md".
+Name of the summary doc must be in format: "summary.md".
 
 Suggest the skills to be used, if any, by the next session.
 
