@@ -19,6 +19,15 @@
       ]
     },
     {
+      "name": "routine-skills",
+      "description": "Collection of skills for automating routine tasks",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/summarize-in-doc"
+      ]
+    },
+    {
       "name": "gerrit",
       "description": "Gerrit code review workflows",
       "source": "./",
