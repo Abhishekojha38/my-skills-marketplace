@@ -24,7 +24,8 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./skills/summarize-in-doc"
+        "./skills/summarize-in-doc",
+        "./skills/git-commit"
       ]
     },
     {
