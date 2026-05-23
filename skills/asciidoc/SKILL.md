@@ -2,21 +2,18 @@
 name: asciidoctor
 description: >
   Use this skill whenever the user wants to create, edit, review, reformat, or
-  improve AsciiDoc (.adoc) files. Triggers include: any mention of ".adoc",
-  "AsciiDoc", "Asciidoctor", "adoc file", or requests to write technical
-  documentation, READMEs, manuals, or structured documents in AsciiDoc format.
-  Also triggers for: wrapping lines at 80 characters in .adoc files, grammar
-  checking AsciiDoc content, adding or formatting tables in AsciiDoc, converting
-  bullet lists to AsciiDoc syntax, applying text highlighting or admonition
-  blocks, linting or cleaning up .adoc formatting, and converting Markdown or
-  plain text into AsciiDoc. When in doubt, use this skill for any task touching
-  an .adoc file — even if the user just says "fix my doc" and there's an .adoc
-  file present.
+  improve AsciiDoc (.adoc) files. Triggers include any mention of ".adoc",
+  "AsciiDoc", "Asciidoctor", or requests to write technical documentation,
+  READMEs, manuals, or structured documents in AsciiDoc format. Also triggers
+  for converting Markdown or plain text into AsciiDoc. When in doubt, use this
+  skill for any task touching an .adoc file — even if the user just says
+  "fix my doc" and an .adoc file is present.
+allowed-tools: shell
 ---
 
 # AsciiDoctor Skill
 
-This skill enables AI agents to create, modify, review, and format AsciiDoc
+This skill enables Copilot to create, modify, review, and format AsciiDoc
 (`.adoc`) files to a professional standard. It covers the full editing
 lifecycle: line wrapping, grammar checking, structural formatting (tables,
 lists, headings), text highlighting, and admonition blocks.
@@ -37,17 +34,33 @@ re-wrapping after content insertions.
 
 ## 1. Reading and Writing `.adoc` Files
 
-Use `bash_tool` or `view` to read `.adoc` files from disk.
+Read `.adoc` files using the shell:
 
 ```bash
 cat /path/to/file.adoc
 ```
 
-Write changes using `str_replace` for targeted edits, or `create_file` when
-rewriting the whole document.
+For large files, inspect specific sections with `head`, `tail`, or `sed`:
 
-Always preserve the document header block (lines starting with `=`, `:author:`,
-`:revdate:`, `:doctype:`, etc.) exactly — do not reformat it.
+```bash
+head -50 file.adoc
+sed -n '20,60p' file.adoc
+```
+
+Write changes by opening the file directly in the editor, or output the full
+corrected content and write it back:
+
+```bash
+# Check lines over 80 chars before and after editing
+awk 'length > 80 {print NR": "length" chars: "$0}' file.adoc
+```
+
+Use targeted in-place edits for small changes; rewrite the full file for large
+restructuring tasks.
+
+Always preserve the document header block exactly — do not reformat lines
+starting with `=`, `:author:`, `:revdate:`, `:doctype:`, `:toc:`,
+`:imagesdir:`, or any other document attribute.
 
 ---
 
@@ -74,58 +87,26 @@ Always preserve the document header block (lines starting with `=`, `:author:`,
 - Break at a word boundary; never split a word across lines.
 - Continuation lines in a paragraph need **no** special character — a bare
   newline continues the paragraph in AsciiDoc.
-- For list items longer than 80 chars, indent the continuation with `+` or
-  just a two-space indent on the next line:
+- For list items longer than 80 chars, indent the continuation with two spaces:
 
 ```adoc
 * This is a long list item that needs to be wrapped at the eighty character
   boundary so it stays readable.
 ```
 
-### Automated wrap (bash helper)
-
-When wrapping a large file, use `fold` or `fmt` carefully — only on prose
-paragraphs, never on code blocks:
+### Automated wrap helper
 
 ```bash
-# Quick check: list lines over 80 chars with line numbers
+# List lines over 80 chars with line numbers
 awk 'length > 80 {print NR": "length" chars: "$0}' file.adoc
 ```
 
-Review output manually; do not blindly pipe the whole file through `fold`.
+Review output manually; do not blindly pipe the whole file through `fold` as
+it will break AsciiDoc syntax.
 
 ---
 
-## 3. Grammar Check
-
-Perform a grammar review on all prose content. Focus on:
-
-- Subject–verb agreement
-- Correct article usage (a/an/the)
-- Consistent tense (prefer present tense for technical docs)
-- Spelling errors
-- Oxford comma in lists of three or more items
-- Avoid passive voice where active is clearer
-- Remove redundant words ("in order to" → "to", "due to the fact that" →
-  "because")
-
-**Do not** change technical terms, product names, command strings, or content
-inside code blocks (`----` fences), inline code (`` `code` ``), or attribute
-values.
-
-When reporting grammar changes, list them as a brief summary after the edited
-file, e.g.:
-
-```
-Grammar changes:
-- Line 14: "it are" → "it is"
-- Line 31: removed redundant "in order to"
-- Line 55: "an user" → "a user"
-```
-
----
-
-## 4. Tables
+## 3. Tables
 
 Use AsciiDoc's `|===` table syntax. Follow these conventions:
 
@@ -175,7 +156,7 @@ a| This cell can contain *bold*, lists, etc.
 
 ---
 
-## 5. Bullet Points and Lists
+## 4. Bullet Points and Lists
 
 ### Unordered list (bullets)
 
@@ -239,7 +220,7 @@ npm install my-package
 
 ---
 
-## 6. Text Highlighting and Emphasis
+## 5. Text Highlighting and Emphasis
 
 ### Inline formatting
 
@@ -302,7 +283,7 @@ Make sure you have a backup before proceeding.
 
 ---
 
-## 7. Document Structure Conventions
+## 6. Document Structure Conventions
 
 ### Header block
 
@@ -341,18 +322,20 @@ Do not skip levels (e.g., never go from `==` directly to `====`).
 
 ---
 
-## 8. Code Blocks
+## 7. Code Blocks
 
 Always use a named source block with a language tag:
 
 ```adoc
 [source,bash]
 ----
+# content of the file
 echo "Hello, world"
 ----
 
 [source,python]
 ----
+# content of the file
 def greet(name):
     return f"Hello, {name}"
 ----
@@ -364,7 +347,7 @@ def greet(name):
 
 ---
 
-## 9. Review Checklist
+## 8. Review Checklist
 
 Run through this checklist before finalising any `.adoc` file:
 
@@ -380,14 +363,18 @@ Run through this checklist before finalising any `.adoc` file:
 - [ ] Blank lines present before and after all blocks
 - [ ] No bare URLs — wrap in `<url>` or use `link:url[label]`
 
+You can run a quick line-length check at any time:
+
+```bash
+awk 'length > 80 {print NR": "length" chars: "$0}' file.adoc
+```
+
 ---
 
-## 10. Output Format
+## 9. Output Format
 
-When returning an edited file:
-
-1. Output the full corrected `.adoc` content (use `create_file` to write it).
-2. Follow with a **Changes Summary** section in chat:
+When returning an edited file, write the corrected content back to disk, then
+provide a **Changes Summary** in chat:
 
 ```
 Changes Summary
