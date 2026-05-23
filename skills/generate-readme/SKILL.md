@@ -1,148 +1,129 @@
 ---
-name: generate-readme
+name: readme-generator
 description: >
-  Use this skill whenever the user asks to create, write,
-  improve, or update a README — even if phrased casually ("write docs for my
-  repo", "add a README", "document this project", "make a readme for this").
-  Supports both Markdown and AsciiDoc output formats; defaults to Markdown
-  unless the user specifies .adoc, AsciiDoc, or the project already uses
-  README.adoc.
+  Generate polished, professional README.md files for any software project. Use this skill
+  whenever the user asks to create, write, generate, or improve a README — even if they just
+  say "add a README to my project", "document this repo", "make a readme for this", or "help
+  me write documentation". Also trigger when the user shares code/a repo and asks for
+  documentation or wants to publish something. This skill produces complete, structured READMEs
+  that follow best practices for open-source and internal projects alike.
 ---
 
-# Generate README
+# README Generator
 
-Produce a clear, developer-friendly README — in Markdown (`.md`) or AsciiDoc
-(`.adoc`) format — for any software project.
-
----
-
-## Workflow
-
-### 0. Determine output format
-
-Decide whether to produce Markdown (`.md`) or AsciiDoc (`.adoc`) **before**
-writing anything.
-
-If ambiguous, default to **Markdown**. If the user uploads a `.adoc` file to
-improve, match that format.
+Produces professional, complete `README.md` files. The output should feel human-crafted,
+concise, and tailored — never generic boilerplate.
 
 ---
 
-### 2. Gather context
+## Step 1 — Gather Context
 
-Before writing, collect as much of the following as possible from what the user
-has shared. If critical info is missing, ask — but ask once, in a single
-message, not question by question.
+Before writing anything, collect the following. Extract what you can from files/code already
+in context; ask only for what's genuinely missing.
 
-| Signal | Where to look |
+**Required (always ask if not clear):**
+- Project name
+- One-sentence description: what does it do and who is it for?
+- Primary language / framework / stack
+- License (MIT, Apache 2.0, proprietary, etc.) — default to MIT if OSS and user is unsure
+
+**Ask only if not obvious from code:**
+- Is this open-source or internal/private?
+- Does it have a live demo or deployed URL?
+- Any screenshots or logo available?
+- Any special installation gotchas (env vars, OS requirements, Docker, etc.)?
+
+**Never ask for things you can infer** — if you see `package.json`, you know it's Node; if
+you see `pyproject.toml`, it's Python. Read the file tree and infer prerequisites.
+
+---
+
+## Step 2 — Pick the Right Template Variant
+
+| Project type | Use variant |
 |---|---|
-| Project name & purpose | Repo name, package.json `name`/`description`, pyproject.toml, Cargo.toml, etc. |
-| Entry point / install command | `package.json scripts`, `Makefile`, `setup.py`, `Dockerfile` |
-| Dependencies | `requirements.txt`, `package.json dependencies` |
-| Build command | `Makefile`, `Dockerfile`, `build.sh` |
-| License | `LICENSE` file, package metadata |
-| Existing docs / comments | Inline docstrings, existing partial README |
-
-If the user uploads files or pastes code, extract everything you can before
-asking questions.
+| Open-source library / tool | **OSS** (full shields, contributing guide, acknowledgments) |
+| Internal / company project | **Internal** (no shields, no contributing, add team/owner section) |
+| CLI tool | **OSS** + emphasize Usage with terminal examples |
+| API / SDK | **OSS** + emphasize Usage with code samples, link to API docs |
+| Simple script / utility | **Minimal** (skip roadmap, contributing, acknowledgments) |
 
 ---
 
-#### Core sections (in order)
+## Step 3 — Write the README
 
-```
-# Project Name
-[badges — build, version, license — only if verifiable]
+Use the template in `assets/README_TEMPLATE.md` as your structural foundation, but
+**adapt freely** — omit sections that don't apply, merge thin sections, and write in a tone
+that matches the project's personality (playful OSS tool vs serious enterprise SDK).
 
-One-sentence tagline.
+### Section guidance
 
-## Version Table
-To track changes in different versions of the project
+**Header block**
+- Include shields only for OSS projects. Pick relevant ones from the shields list in
+  `references/shields.md`. Don't dump every possible shield — 3–5 is the sweet spot.
+- Logo: include `<img>` tag placeholder only if user mentions they have one.
 
-| Version | Changes | Date |
-|---|---|---|
-| 1.0 | Initial release | 2022-01-01 |
-| 1.1 | Added new feature | 2022-02-01 |
-| 1.2 | Fixed bugs | 2022-03-01 |
+**About the Project**
+- Lead with the *problem*, then the solution. 2–4 sentences max. No filler.
+- Screenshot placeholder: include it. It's one of the highest-value README elements.
 
-## Overview / About
-2–4 sentences: what it does, who it's for, why it exists.
+**Built With**
+- Shield badges for major frameworks/languages only. Use the badge list in `references/shields.md`.
+- Don't list every dependency — only the headline tech.
 
-## Features
-Bullet list of 3–8 key capabilities. Be concrete, not marketing-speak.
+**Getting Started**
+- Prerequisites: only things the user must install manually (not transitive deps).
+- Tools required for compilation and execution of the project.
+- Installation: numbered steps, working code blocks. Test mentally — would this actually work?
+- If the project needs env vars, show an `.env.example` snippet.
 
-## Requirements / Prerequisites
-Language version, OS constraints, external services needed.
+**Build Instructions**
+- If there is a build step, add it here.
+- **Note**: This section is optional and should only be included if the project has a build step.
 
-## Installation
-Step-by-step shell commands in fenced code blocks.
+**Usage**
+- This is the most important section. Show real, copy-pasteable examples.
+- For CLIs: show terminal session examples.
+- For libraries: show import + minimal working code snippet.
+- For web apps: link to demo + show a screenshot.
 
-## Build Instructions
-Add Build Instructions
+**Roadmap**
+- Use `- [ ]` / `- [x]` checkboxes. Suggest 3–5 plausible items if user doesn't provide them.
+- Add a line linking to Issues for community suggestions.
 
-## Usage
-The most common invocation first — code block with realistic example.
-Add sub-sections for advanced usage if needed.
+**Contributing** (OSS only)
+- Standard fork → branch → PR flow. Keep it to the standard 5 steps.
 
-## Configuration
-Environment variables or config file options, in a table if there are many.
-(Omit for minimal projects.)
+**License**
+- State the license name and link to `LICENSE` or `LICENSE.txt`.
 
-## API Reference
-(Only for libraries.) Key public functions/classes with signatures and
-one-line descriptions. Link to full docs if they exist elsewhere.
+**Contact**
+- Fill in placeholders; note that the user should replace them.
 
-## Contributing
-How to open issues, run tests, submit PRs. Reference CONTRIBUTING.md if
-present. (Omit for personal/private projects unless asked.)
+**Acknowledgments** (OSS only)
+- Suggest 3–5 genuinely relevant resources. Don't just copy the template's generic list.
 
-## License
-One-liner + SPDX identifier. E.g.: "MIT — see [LICENSE](LICENSE)"
-```
-
-#### Sections to include only when warranted
-
-- **Architecture / How it works** — add for projects where understanding
-  internals helps contributors
-- **Roadmap** — only if the user provides one or asks for it
-- **FAQ** — only if there are known common questions
-- **Screenshots / Demo** — include placeholder `![screenshot](docs/...)` if
-  the user mentions a UI but hasn't provided images
-
----
-
-### 5. Formatting rules 
-
-**Markdown (`.md`)**
-- Use ATX headings (`##`, not underline style).
-- Fenced code blocks with a language hint: ` ```bash `, ` ```python `, etc.
-- Keep lines ≤ 100 chars for readability in raw form.
-- Don't invent badges or shield URLs unless the CI/package info is verifiable
-  from the provided files.
-
-**AsciiDoc (`.adoc`)** — use asciidoc skill
+### Writing rules
+- Use second person ("Run `npm install`") not third ("The user should run…").
+- Code blocks must specify the language for syntax highlighting.
+- Every `<p align="right">(<a href="#readme-top">back to top</a>)</p>` goes at the end of each
+  H2 section (omit for very short READMEs, it looks cluttered).
+- Placeholders: wrap in `<YOUR_VALUE>` style so they're obvious.
+- No filler phrases like "This project was created to…" or "Welcome to…".
 
 ---
 
-### 6. Output
+## Step 4 — Output
 
-- **Markdown**: save to current directory `README.md`
-- **AsciiDoc**: save to current directory `README.adoc`
-- After saving, call `present_files` so the user can download it.
-- In your reply, note the format chosen and any sections omitted and why
-  (e.g., "Generated AsciiDoc. Skipped API Reference — this is a CLI.").
+Return the complete README as a fenced markdown code block **and** save it to a file named
+`README.md` using the file creation tool so the user can download it directly.
+
+After presenting the file, offer:
+> "Want me to adjust the tone, swap any sections, or add something specific?"
 
 ---
 
-## Quality checklist (review before saving)
+## Reference files
 
-- [ ] Project name matches actual name (not a placeholder)
-- [ ] Install and usage commands are syntactically correct
-- [ ] No fabricated version numbers, URLs, or badge links
-- [ ] No empty sections
-- [ ] Code blocks have language hints
-- [ ] License matches what's in the repo (if detectable)
-- [ ] Output file extension matches chosen format (`.md` or `.adoc`)
-- [ ] line wrap is <= 80 chars
-- [ ] 200 words limit
-- [ ] Grammar and spelling are correct.
+- `assets/README_TEMPLATE.md` — Full annotated template to build from
+- `references/shields.md` — Curated shield badge list for common languages/frameworks
