@@ -36,6 +36,15 @@
       "skills": [
         "./skills/gerrit"
       ]
+    },
+    {
+      "name": "schematic-review",
+      "description": "Schematic review and table generation",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/review-schematics"
+      ]
     }
   ]
 }
