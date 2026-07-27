@@ -45,6 +45,15 @@
       "skills": [
         "./skills/review-schematics"
       ]
+    },
+    {
+      "name": "tmux",
+      "description": "tmux is required for interactive shell session",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/tmux"
+      ]
     }
   ]
 }
